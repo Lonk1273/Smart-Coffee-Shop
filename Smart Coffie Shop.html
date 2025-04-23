@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Coffee Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f8f8;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        .btn {
+            background-color: #6e4f3b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #5a4231;
+        }
+        .amount {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6e4f3b;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .order-summary {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .drink-row {
+            margin-bottom: 15px;
+        }
+        .estimated-time {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .coffee-info {
+            font-size: 16px;
+            color: #6e4f3b;
+            margin-top: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .drink-image {
+            width: 150px;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Coffee Shop Page -->
+<div class="container" id="coffeeShopPage">
+    <h1>Welcome to the Smart Coffee Shop!</h1>
+    <p>Choose your drinks:</p>
+
+    <!-- Coffee Information -->
+    <div class="coffee-info">
+        <h2>Our Coffees</h2>
+        <p><strong>Coffee:</strong> A classic choice made from freshly ground beans. Available in Regular or Espresso sizes.</p>
+        <p><strong>Hot Chocolate:</strong> A rich, creamy chocolate drink, made with real cocoa. Available in Regular or Espresso sizes.</p>
+        <p><strong>Mocha:</strong> A delicious combination of coffee and chocolate for the ultimate indulgence. Available in Regular or Espresso sizes.</p>
+    </div>
+
+    <!-- Drink Selection -->
+    <div class="drink-row">
+        <label><strong>Coffee:</strong></label><br />
+        Regular (£2.50): <input type="number" id="coffeeRegularQty" min="0" value="0" />
+        <br />
+        Espresso (£2.00): <input type="number" id="coffeeEspressoQty" min="0" value="0" />
+        <br />
+        <img src="https://freerangestock.com/sample/56189/coffee-cup-with-leaf-drawing.jpg" alt="Coffee" class="drink-image" />
+    </div>
+
+    <div class="drink-row">
+        <label><strong>Hot Chocolate:</strong></label><br />
+        Regular (£3.00): <input type="number" id="hotChocolateRegularQty" min="0" value="0" />
+        <br />
+        Espresso (£2.50): <input type="number" id="hotChocolateEspressoQty" min="0" value="0" />
+        <br />
+        <img src="https://www.stockvault.net/data/2016/06/17/202090/preview16.jpg" alt="Hot Chocolate" class="drink-image" />
+    </div>
+
+    <div class="drink-row">
+        <label><strong>Mocha:</strong></label><br />
+        Regular (£3.50): <input type="number" id="mochaRegularQty" min="0" value="0" />
+        <br />
+        Espresso (£3.00): <input type="number" id="mochaEspressoQty" min="0" value="0" />
+        <br />
+        <img src="https://images.rawpixel.com/image_800/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL2ZyY2FwcHVjY2lub19iZXZlcmFnZV9pbl9tb3JuaW5nXzUtaW1hZ2Uta3liYnk1MmwuanBn.jpg" alt="Mocha" class="drink-image" />
+    </div>
+
+    <button class="btn" onclick="placeOrder()">Go to Payment</button>
+</div>
+
+<!-- Payment Simulation Page (hidden initially) -->
+<div class="container hidden" id="paymentPage">
+    <h1>Payment for Your Drinks</h1>
+    <div id="orderSummary" class="order-summary">
+        <!-- Summary will appear here -->
+    </div>
+    <div class="estimated-time" id="estimatedTime">
+        <!-- Estimated time will appear here -->
+    </div>
+    <button class="btn" onclick="simulatePayment()">Confirm and Pay</button>
+</div>
+
+<!-- Payment Loading Page (hidden initially) -->
+<div class="container hidden" id="loadingPage">
+    <h2>Processing Payment...</h2>
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- Payment Confirmation Page (hidden initially) -->
+<div class="container hidden" id="confirmationPage">
+    <h1>Thank You for Your Purchase!</h1>
+    <p>Your order has been successfully processed.</p>
+    <p>Order Number: <strong>#123456789</strong></p>
+    <button class="btn" onclick="restart()">Back to Coffee Shop</button>
+</div>
+
+<script>
+    const drinkPrices = {
+        'Coffee': { 'Regular': 2.50, 'Espresso': 2.00 },
+        'Hot Chocolate': { 'Regular': 3.00, 'Espresso': 2.50 },
+        'Mocha': { 'Regular': 3.50, 'Espresso': 3.00 }
+    };
+
+    let fullOrder = [];
+
+    // Collect the user's drink selection and go to the payment page
+    function placeOrder() {
+        fullOrder = [];
+
+        const inputs = [
+            { type: 'Coffee', size: 'Regular', qty: parseInt(document.getElementById('coffeeRegularQty').value) },
+            { type: 'Coffee', size: 'Espresso', qty: parseInt(document.getElementById('coffeeEspressoQty').value) },
+            { type: 'Hot Chocolate', size: 'Regular', qty: parseInt(document.getElementById('hotChocolateRegularQty').value) },
+            { type: 'Hot Chocolate', size: 'Espresso', qty: parseInt(document.getElementById('hotChocolateEspressoQty').value) },
+            { type: 'Mocha', size: 'Regular', qty: parseInt(document.getElementById('mochaRegularQty').value) },
+            { type: 'Mocha', size: 'Espresso', qty: parseInt(document.getElementById('mochaEspressoQty').value) },
+        ];
+
+        inputs.forEach(item => {
+            if (item.qty > 0) {
+                fullOrder.push(item);
+            }
+        });
+
+        showOrderSummary();
+    }
+
+    // Show the order summary before proceeding to payment
+    function showOrderSummary() {
+        let orderSummary = '';
+        let totalAmount = 0;
+
+        fullOrder.forEach(item => {
+            const amount = item.qty * drinkPrices[item.type][item.size];
+            orderSummary += `<p>${item.qty} x ${item.size} ${item.type} - £${amount.toFixed(2)}</p>`;
+            totalAmount += amount;
+        });
+
+        // Display the order summary and total amount
+        document.getElementById('orderSummary').innerHTML = orderSummary;
+        document.getElementById('orderSummary').innerHTML += `<hr><h3>Total: £${totalAmount.toFixed(2)}</h3>`;
+
+        // Estimate the time based on the number of drinks
+        const estimatedTime = (fullOrder.length * 2) + 5; // Assume each drink takes 2 mins, plus 5 mins for prep
+        document.getElementById('estimatedTime').innerHTML = `Estimated Time: ${estimatedTime} minutes`;
+
+        // Hide the coffee shop page and show the payment page
+        document.getElementById("coffeeShopPage").style.display = "none";
+        document.getElementById("paymentPage").style.display = "block";
+    }
+
+    // Simulate the payment process
+    function simulatePayment() {
+        // Hide the payment page and show the loading page
+        document.getElementById("paymentPage").style.display = "none";
+        document.getElementById("loadingPage").style.display = "block";
+
+        // Simulate a delay for processing the payment
+        setTimeout(function() {
+            // Hide the loading page and show the confirmation page
+            document.getElementById("loadingPage").style.display = "none";
+            document.getElementById("confirmationPage").style.display = "block";
+        }, 3000);  // Simulates a 3-second delay for processing
+    }
+
+    // Restart the process and return to the coffee shop
+    function restart() {
+        location.reload(); // Refresh the page to go back to the coffee shop
+    }
+</script>
+
+</body>
+</html>
